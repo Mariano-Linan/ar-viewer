@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Componente AR Dinámico</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        .ar-component { width: 150px; text-align: center; background-color: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .image-model { width: 100%; height: auto; border-radius: 5px; }
+        .block-link { display: block; color: #333; text-decoration: none; margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="arComponentContainer" class="ar-component">
+        <!-- El contenido se llenará dinámicamente con JavaScript -->
+    </div>
+
+    <script>
+        window.onload = function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var arModelUrl = urlParams.get('url');
+            var imageUrl = urlParams.get('image') || 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/PHOTO-2024-04-10-11-06-33.jpg'; // URL de imagen por defecto
+            var modelName = urlParams.get('name') || 'AR Model';
+
+            var container = document.getElementById('arComponentContainer');
+            container.innerHTML = `
+                <a id="arLink" rel="ar" href="${arModelUrl}">
+                    <img class="image-model" src="${imageUrl}" alt="${modelName}">
+                    <div class="block-link">${modelName}</div>
+                </a>
+            `;
+
+            // Verificar si el dispositivo es compatible con AR Quick Look
+            var isIOSWithARQuickLook = /iP(hone|od|ad)/.test(navigator.platform) && /OS 1[2-9]/.test(navigator.userAgent);
+            
+            if (isIOSWithARQuickLook && arModelUrl) {
+                // Simular clic en el enlace AR después de un breve retraso
+                setTimeout(function() {
+                    document.getElementById('arLink').click();
+                }, 20); // 1000 ms = 1 segundo de retraso
+            } else if (!arModelUrl) {
+                container.innerHTML = '<p>Error: No se proporcionó una URL para el modelo AR.</p>';
+            } else {
+                console.log("Este dispositivo puede no ser compatible con AR Quick Look.");
+            }
+        };
+    </script>
+</body>
+</html>
