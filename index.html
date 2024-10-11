@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor AR con Seguridad</title>
+    <title>Visor AR con Seguridad AWS</title>
     <style>
         /* Tus estilos CSS */
         body {
@@ -64,19 +64,6 @@
     </div>
 
     <script>
-        // Función para generar el hash SHA-256
-        async function generateHash(fileName) {
-            const encoder = new TextEncoder();
-            const secret = "mi-clave-secreta";  // Cambia esto por una clave secreta que solo tú conozcas
-            const data = encoder.encode(fileName + secret);
-
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-            return hashHex;
-        }
-
         // Función para inicializar la página y generar el enlace AR
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -85,23 +72,21 @@
             const displayName = urlParams.get('name') || 'Ver en AR';
 
             const container = document.getElementById('arComponentContainer');
+            
+            const s3BaseUrl = 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/';
+            const modelUrl = `${s3BaseUrl}${encodeURIComponent(modelName)}.usdz`;
 
-            generateHash(modelName).then(hash => {
-                const s3BaseUrl = 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/';
-                const modelUrl = `${s3BaseUrl}${encodeURIComponent(modelName)}.usdz?auth=${hash}`;
+            // Crear el enlace AR directamente con la URL del archivo en S3
+            const arLinkHtml = `
+                <div class="image-container">
+                    <a id="arLink" href="${modelUrl}" rel="ar">
+                        <img class="image-model" src="${imageUrl}" alt="${displayName}">
+                    </a>
+                    <div class="block-link">${displayName}</div>
+                </div>
+            `;
 
-                // Crear el enlace AR
-                const arLinkHtml = `
-                    <div class="image-container">
-                        <a id="arLink" href="${modelUrl}" rel="ar">
-                            <img class="image-model" src="${imageUrl}" alt="${displayName}">
-                        </a>
-                        <div class="block-link">${displayName}</div>
-                    </div>
-                `;
-
-                container.innerHTML = arLinkHtml;
-            });
+            container.innerHTML = arLinkHtml;
         });
     </script>
 </body>
