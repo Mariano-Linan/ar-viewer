@@ -3,12 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Componente AR Dinámico</title>
+    <title>Visor AR con Seguridad</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
-        .ar-component { width: 150px; text-align: center; background-color: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .image-model { width: 100%; height: auto; border-radius: 5px; }
-        .block-link { display: block; color: #333; text-decoration: none; margin-top: 10px; font-weight: bold; }
+        /* Tus estilos CSS */
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .ar-component {
+            width: 280px;
+            text-align: center;
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .ar-component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .image-model {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+        .image-container:hover .image-model {
+            transform: scale(1.05);
+        }
+        .block-link {
+            display: inline-block;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #007bff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+        .block-link:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -17,34 +64,45 @@
     </div>
 
     <script>
-        window.onload = function() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var arModelUrl = urlParams.get('url');
-            var imageUrl = urlParams.get('image') || 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/PHOTO-2024-04-10-11-06-33.jpg'; // URL de imagen por defecto
-            var modelName = urlParams.get('name') || 'AR Model';
+        // Función para generar el hash SHA-256
+        async function generateHash(fileName) {
+            const encoder = new TextEncoder();
+            const secret = "mi-clave-secreta";  // Cambia esto por una clave secreta que solo tú conozcas
+            const data = encoder.encode(fileName + secret);
 
-            var container = document.getElementById('arComponentContainer');
-            container.innerHTML = `
-                <a id="arLink" rel="ar" href="${arModelUrl}">
-                    <img class="image-model" src="${imageUrl}" alt="${modelName}">
-                    <div class="block-link">${modelName}</div>
-                </a>
-            `;
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-            // Verificar si el dispositivo es compatible con AR Quick Look
-            var isIOSWithARQuickLook = /iP(hone|od|ad)/.test(navigator.platform) && /OS 1[2-9]/.test(navigator.userAgent);
-            
-            if (isIOSWithARQuickLook && arModelUrl) {
-                // Simular clic en el enlace AR después de un breve retraso
-                setTimeout(function() {
-                    document.getElementById('arLink').click();
-                }, 20); // 1000 ms = 1 segundo de retraso
-            } else if (!arModelUrl) {
-                container.innerHTML = '<p>Error: No se proporcionó una URL para el modelo AR.</p>';
-            } else {
-                console.log("Este dispositivo puede no ser compatible con AR Quick Look.");
-            }
-        };
+            return hashHex;
+        }
+
+        // Función para inicializar la página y generar el enlace AR
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const modelName = urlParams.get('model') || 'lampara_v3_v1'; // Nombre del modelo sin extensión
+            const imageUrl = urlParams.get('image') || 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/PHOTO-2024-04-10-11-06-33.jpg';
+            const displayName = urlParams.get('name') || 'Ver en AR';
+
+            const container = document.getElementById('arComponentContainer');
+
+            generateHash(modelName).then(hash => {
+                const s3BaseUrl = 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/';
+                const modelUrl = `${s3BaseUrl}${encodeURIComponent(modelName)}.usdz?auth=${hash}`;
+
+                // Crear el enlace AR
+                const arLinkHtml = `
+                    <div class="image-container">
+                        <a id="arLink" href="${modelUrl}" rel="ar">
+                            <img class="image-model" src="${imageUrl}" alt="${displayName}">
+                        </a>
+                        <div class="block-link">${displayName}</div>
+                    </div>
+                `;
+
+                container.innerHTML = arLinkHtml;
+            });
+        });
     </script>
 </body>
 </html>
