@@ -66,15 +66,34 @@
     <script>
         // Función para inicializar la página y generar el enlace AR
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página cargada, iniciando script...');
+            
+            // Extraer parámetros de la URL
             const urlParams = new URLSearchParams(window.location.search);
             const modelName = urlParams.get('model') || 'lampara_v3_v1'; // Nombre del modelo sin extensión
             const imageUrl = urlParams.get('image') || 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/PHOTO-2024-04-10-11-06-33.jpg';
             const displayName = urlParams.get('name') || 'Ver en AR';
 
+            // Log de los parámetros recibidos
+            console.log('Parámetros recibidos:');
+            console.log('Nombre del modelo:', modelName);
+            console.log('URL de la imagen:', imageUrl);
+            console.log('Nombre para mostrar:', displayName);
+
+            // Verificar que el contenedor existe
             const container = document.getElementById('arComponentContainer');
-            
+            if (!container) {
+                console.error('Error: Contenedor AR no encontrado en el DOM.');
+                return;
+            }
+            console.log('Contenedor AR encontrado en el DOM.');
+
+            // Generar la URL del archivo en S3
             const s3BaseUrl = 'https://misarchivosusdz.s3.ap-southeast-2.amazonaws.com/';
             const modelUrl = `${s3BaseUrl}${encodeURIComponent(modelName)}.usdz`;
+
+            // Log de la URL generada para el modelo AR
+            console.log('URL generada para el modelo AR:', modelUrl);
 
             // Crear el enlace AR directamente con la URL del archivo en S3
             const arLinkHtml = `
@@ -86,7 +105,18 @@
                 </div>
             `;
 
+            // Insertar el HTML en el contenedor
             container.innerHTML = arLinkHtml;
+            console.log('Componente AR insertado en el DOM con éxito.');
+
+            // Comprobación final: Intentar cargar la URL del modelo AR
+            const arLink = document.getElementById('arLink');
+            if (arLink) {
+                console.log('Probando carga del modelo AR:', modelUrl);
+                // Puedes agregar más validaciones aquí si es necesario.
+            } else {
+                console.error('Error: Enlace AR no encontrado en el DOM.');
+            }
         });
     </script>
 </body>
